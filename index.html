@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Farm Project - Interactive Dashboard</title>
+    <!-- Chosen Palette: Calm Neutrals & Green Accent -->
+    <!-- Application Structure Plan: The SPA is structured into six logical, scrollable sections: Overview, System Architecture, Live Simulator, AI Models, SDG Impact, and Technical Documents. A sticky top navigation allows users to jump to any section. This thematic structure guides the user from a high-level concept down to its global impact and technical specifics, with the live simulator as the engaging centerpiece. -->
+    <!-- Visualization & Content Choices: 
+        - Architecture Diagram: Goal: Organize -> Method: HTML/CSS Flexbox diagram. Justification: Clearly shows data flow without SVG/Mermaid.
+        - Live Data Simulator: Goal: Change/Inform -> Method: JS-updated text values and status indicators, with Chart.js line charts. Justification: Demonstrates the real-time monitoring aspect.
+        - SDG Impact Cards: Goal: Inform/Relate -> Method: Styled HTML cards with text content. Justification: Clearly links project features to specific global goals in a visually organized manner.
+        - Component Pinout Table: Goal: Organize -> Method: Interactive HTML table with JS filters. Justification: Provides a user-friendly way to explore detailed technical specifications.
+        - Gemini API Integration: Goal: Analyze/Explain -> Method: JS fetch call to Gemini API on button click. Justification: Adds a layer of intelligent analysis to alerts and project impact statements.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-green: #5a7d35; /* Extracted from logo */
+            --light-gray: #f8fafc;
+            --dark-gray: #334155;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+        }
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: var(--brand-green);
+            border-bottom-color: var(--brand-green);
+        }
+        .chart-container {
+            position: relative;
+            height: 150px;
+            width: 100%;
+        }
+        .status-on {
+            color: #16a34a; background-color: #dcfce7;
+        }
+        .status-off {
+            color: #dc2626; background-color: #fee2e2;
+        }
+        .status-idle {
+            color: #64748b; background-color: #f1f5f9;
+        }
+        .sdg-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #fff;
+            border-left-width: 5px;
+        }
+        .gemini-button {
+            transition: all 0.2s;
+        }
+        .gemini-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="Images\GradLogo.png" alt="Smart Farm Logo" class="h-10 w-10">
+                <h1 class="text-lg sm:text-xl font-bold text-gray-800">AgriMind</h1>
+            </div>
+            <nav class="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-semibold">
+                <a href="#overview" class="nav-link active px-2 py-1">Overview</a>
+                <a href="#architecture" class="nav-link px-2 py-1">Architecture</a>
+                <a href="#simulator" class="nav-link px-2 py-1">Live Simulator</a>
+                <a href="#ai-models" class="nav-link px-2 py-1">AI Models</a>
+                <a href="#sdg-impact" class="nav-link px-2 py-1">SDG Impact</a>
+                <a href="#docs" class="nav-link px-2 py-1">Technical Docs</a>
+            </nav>
+            <div class="md:hidden">
+                 <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <span class="text-2xl">☰</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 md:p-8 space-y-16 sm:space-y-20">
+
+        <!-- Section 1: Overview -->
+        <section id="overview" class="pt-16 -mt-16">
+            <div class="text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900">Automating Tomorrow's Harvest, Today</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-base sm:text-lg text-gray-600">A comprehensive Smart Farming system leveraging IoT and AI to enhance agricultural efficiency, sustainability, and productivity through data-driven insights and remote automation.</p>
+            </div>
+            <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 text-center">
+                <div class="card p-6">
+                    <p class="text-4xl">💡</p>
+                    <h3 class="mt-4 text-xl font-bold">The Challenge</h3>
+                    <p class="mt-2 text-gray-600">Addressing resource scarcity, climate volatility, and the inefficiencies of manual labor in modern agriculture.</p>
+                </div>
+                <div class="card p-6">
+                    <p class="text-4xl">🚀</p>
+                    <h3 class="mt-4 text-xl font-bold">The Solution</h3>
+                    <p class="mt-2 text-gray-600">An integrated platform of sensors, actuators, and AI models managed via a cloud backend and mobile app.</p>
+                </div>
+                <div class="card p-6 sm:col-span-2 lg:col-span-1">
+                    <p class="text-4xl">✨</p>
+                    <h3 class="mt-4 text-xl font-bold">Key Features</h3>
+                    <p class="mt-2 text-gray-600">Includes automated climate control, AI-powered quality assessment, advanced security, and full remote operation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: System Architecture -->
+        <section id="architecture" class="pt-16 -mt-16">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900">End-to-End System Architecture</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-gray-600">Data flows seamlessly from the physical environment to the user's fingertips, enabling instant monitoring and intelligent control.</p>
+            </div>
+            <div class="mt-10 card p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center">
+                <div class="p-2"><p class="text-4xl md:text-5xl">🛰️</p><p class="font-bold mt-2">Sensors & Cameras</p></div>
+                <div class="text-3xl text-gray-300 font-light transform rotate-90 md:rotate-0">→</div>
+                <div class="p-2"><p class="text-4xl md:text-5xl">🤖</p><p class="font-bold mt-2">ESP32 Controllers</p></div>
+                <div class="text-3xl text-gray-300 font-light transform rotate-90 md:rotate-0">→</div>
+                <div class="p-2"><p class="text-4xl md:text-5xl">☁️</p><p class="font-bold mt-2">Firebase Cloud</p></div>
+                <div class="text-3xl text-gray-300 font-light transform rotate-90 md:rotate-0">→</div>
+                <div class="p-2"><p class="text-4xl md:text-5xl">📱</p><p class="font-bold mt-2">Flutter App</p></div>
+            </div>
+        </section>
+        
+        <!-- Section 3: Live Data Simulator -->
+        <section id="simulator" class="pt-16 -mt-16">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Live Data Simulator</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-gray-600">This dashboard mimics the real-time data feed from the farm's three operational zones, demonstrating the system's monitoring capabilities.</p>
+                <div class="flex justify-center items-center gap-2 mt-4">
+                    <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <p id="last-updated" class="text-sm text-gray-500"></p>
+                </div>
+            </div>
+            <div class="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Zone 1 Card -->
+                <div class="card p-5 space-y-4">
+                    <h3 class="text-xl font-bold border-b pb-2">🌱 Zone 1: Greenhouse</h3>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-50 p-3 rounded-lg"><p class="text-sm font-medium text-gray-500">Temperature</p><p id="z1-gh-temp" class="text-2xl font-semibold">--°C</p></div>
+                        <div class="bg-gray-50 p-3 rounded-lg"><p class="text-sm font-medium text-gray-500">Soil Moisture</p><p id="z1-gh-soil" class="text-2xl font-semibold">--%</p></div>
+                    </div>
+                    <div class="chart-container"><canvas id="z1-chart"></canvas></div>
+                    <div class="flex justify-around items-center pt-2">
+                        <div class="text-center"><p class="font-bold">Pump</p><span id="z1-pump-status" class="status-off px-3 py-1 text-sm font-semibold rounded-full">OFF</span></div>
+                        <div class="text-center"><p class="font-bold">Fan</p><span id="z1-fan-status" class="status-off px-3 py-1 text-sm font-semibold rounded-full">OFF</span></div>
+                    </div>
+                </div>
+                <!-- Zone 2 Card -->
+                <div class="card p-5 space-y-4">
+                    <h3 class="text-xl font-bold border-b pb-2">🐄 Zone 2: Barn</h3>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-50 p-3 rounded-lg"><p class="text-sm font-medium text-gray-500">Temperature</p><p id="z2-b-temp" class="text-2xl font-semibold">--°C</p></div>
+                        <div class="bg-gray-50 p-3 rounded-lg"><p class="text-sm font-medium text-gray-500">Noise Level</p><p id="z2-b-sound" class="text-2xl font-semibold">LOW</p></div>
+                    </div>
+                    <div class="chart-container"><canvas id="z2-chart"></canvas></div>
+                    <div id="z2-alert-container" class="flex justify-center items-center pt-2 flex-wrap gap-2">
+                        <div class="text-center"><p class="font-bold">AI Health Alert</p><span id="z2-ai-alert" class="status-idle px-3 py-1 text-sm font-semibold rounded-full">NORMAL</span></div>
+                    </div>
+                </div>
+                <!-- Zone 3 Card -->
+                <div class="card p-5 space-y-4">
+                    <h3 class="text-xl font-bold border-b pb-2">💧 Zone 3: Hydroponics</h3>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-50 p-3 rounded-lg"><p class="text-sm font-medium text-gray-500">Water pH</p><p id="z3-h-ph" class="text-2xl font-semibold">--</p></div>
+                        <div class="bg-gray-50 p-3 rounded-lg"><p class="text-sm font-medium text-gray-500">TDS (Nutrients)</p><p id="z3-h-tds" class="text-2xl font-semibold">-- ppm</p></div>
+                    </div>
+                    <div class="chart-container"><canvas id="z3-chart"></canvas></div>
+                    <div class="flex justify-around items-center pt-2">
+                        <div class="text-center"><p class="font-bold">Nutrient Pump</p><span id="z3-h-pump" class="status-off px-3 py-1 text-sm font-semibold rounded-full">OFF</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: AI Models -->
+        <section id="ai-models" class="pt-16 -mt-16">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Intelligent Analysis with AI</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-gray-600">The project's core innovation lies in its two specialized computer vision models that provide actionable insights without manual inspection.</p>
+            </div>
+            <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-3">Animal Health & Behavior Model</h3>
+                    <p class="text-gray-600">Deployed in the barn, this CNN model analyzes camera feeds to classify animal type and detect anomalous behavior (e.g., prolonged inactivity or distress), flagging potential health issues for early intervention.</p>
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg text-center font-bold text-gray-700">Example Output: "ALERT: COW-03 UNUSUAL BEHAVIOR"</div>
+                </div>
+                 <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-3">Fruit & Vegetable Freshness Model</h3>
+                    <p class="text-gray-600">Operating in the warehouse, this model assesses produce quality by analyzing images for color, texture, and blemishes. It automates quality control by classifying items as "Fresh," "Ripe," or "Rotten."</p>
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg text-center font-bold text-gray-700">Example Output: "BATCH-A7: 95% FRESH"</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: SDG Impact -->
+        <section id="sdg-impact" class="pt-16 -mt-16">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Achieving Sustainable Development Goals</h2>
+                <p class="mt-3 max-w-3xl mx-auto text-gray-600">As a pioneering graduation project in the Delta region, this Smart Farm is not just a technological demonstration; it is a direct contribution towards achieving key UN Sustainable Development Goals (SDGs) and aligning with <b>Egypt's Vision 2030</b> for a sustainable future.</p>
+            </div>
+            <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- SDG Cards -->
+                <div class="sdg-card" style="border-color: #DDA63A;"><div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md font-bold text-white" style="background-color: #DDA63A;">2</div><div><h4 class="font-bold text-lg">Zero Hunger</h4><p class="text-sm text-gray-600">Increases yield and reduces post-harvest loss with AI freshness classification.</p></div></div>
+                <div class="sdg-card" style="border-color: #26BDE2;"><div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md font-bold text-white" style="background-color: #26BDE2;">6</div><div><h4 class="font-bold text-lg">Clean Water and Sanitation</h4><p class="text-sm text-gray-600">Drastically reduces water waste through sensor-based precision irrigation.</p></div></div>
+                <div class="sdg-card" style="border-color: #FCC30B;"><div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md font-bold text-white" style="background-color: #FCC30B;">7</div><div><h4 class="font-bold text-lg">Affordable and Clean Energy</h4><p class="text-sm text-gray-600">Designed to run on a supplemental on-grid solar system, reducing reliance on the main grid.</p></div></div>
+                <div class="sdg-card" style="border-color: #FD6925;"><div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md font-bold text-white" style="background-color: #FD6925;">9</div><div><h4 class="font-bold text-lg">Industry, Innovation, and Infrastructure</h4><p class="text-sm text-gray-600">A direct application of innovative technology (IoT, AI) to modernize agricultural infrastructure.</p></div></div>
+                <div class="sdg-card" style="border-color: #BF8B2E;"><div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md font-bold text-white" style="background-color: #BF8B2E;">12</div><div><h4 class="font-bold text-lg">Responsible Consumption and Production</h4><p class="text-sm text-gray-600">Optimizes the use of water and energy, promoting sustainable production patterns.</p></div></div>
+                <div class="sdg-card" style="border-color: #3F7E44;"><div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md font-bold text-white" style="background-color: #3F7E44;">13</div><div><h4 class="font-bold text-lg">Climate Action</h4><p class="text-sm text-gray-600">Enhances resilience to climate volatility and reduces the carbon footprint of farming activities.</p></div></div>
+            </div>
+            <div class="mt-10 text-center">
+                 <button id="sdg-report-button" class="gemini-button bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700">✨ Generate SDG Impact Analysis</button>
+            </div>
+            <div id="sdg-report-container" class="mt-6 card p-6 hidden"></div>
+        </section>
+
+        <!-- Section 6: Technical Docs -->
+        <section id="docs" class="pt-16 -mt-16">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Technical Documents & Pinout</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-gray-600">Explore the detailed hardware specifications. Select a zone to view its specific components and ESP32 pinout configuration.</p>
+            </div>
+            <div class="mt-10 card p-6">
+                <div id="zone-selector" class="flex flex-col sm:flex-row justify-center gap-2 md:gap-4 mb-6 border-b pb-4">
+                    <button class="zone-button w-full sm:w-auto py-2 px-4 rounded-md font-semibold bg-gray-200 text-gray-800" data-zone="1">Zone 1</button>
+                    <button class="zone-button w-full sm:w-auto py-2 px-4 rounded-md font-semibold bg-gray-200 text-gray-800" data-zone="2">Zone 2</button>
+                    <button class="zone-button w-full sm:w-auto py-2 px-4 rounded-md font-semibold bg-gray-200 text-gray-800" data-zone="3">Zone 3</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="border-b-2 border-gray-200">
+                            <tr>
+                                <th class="py-2 px-4 font-bold">Location</th>
+                                <th class="py-2 px-4 font-bold">Component</th>
+                                <th class="py-2 px-4 font-bold">Pin</th>
+                                <th class="py-2 px-4 font-bold">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pinout-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- Gemini Response Modal -->
+    <div id="gemini-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 relative">
+            <button id="modal-close-button" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            <h3 id="modal-title" class="text-xl font-bold mb-4">AI Advisor</h3>
+            <div id="modal-content" class="text-gray-600 space-y-2"></div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- GEMINI API CALLER ---
+        async function callGemini(prompt, button) {
+            button.disabled = true;
+            button.innerHTML = '<span class="animate-spin mr-2">✨</span>Analyzing...';
+            
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    return result.candidates[0].content.parts[0].text;
+                }
+                return "No analysis available at this time.";
+            } catch (error) {
+                console.error("Gemini API call failed:", error);
+                return "Analysis could not be completed due to an error.";
+            } finally {
+                button.disabled = false;
+            }
+        }
+        
+        // --- GEMINI FEATURE 1: ANOMALY ADVISOR ---
+        const modal = document.getElementById('gemini-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        document.getElementById('modal-close-button').addEventListener('click', () => modal.style.display = 'none');
+
+        function showAnomalyAnalysis(alertType, temperature) {
+            const prompt = `You are an expert agricultural advisor. A smart farm system in a barn in Egypt has detected an anomaly. The AI health monitoring system has triggered an '${alertType}' alert for a cow. The current barn temperature is ${temperature.toFixed(1)}°C. Provide a concise, bulleted list of potential causes and another bulleted list of recommended immediate actions for the farmer.`;
+            const analyzeButton = document.getElementById('analyze-alert-button');
+            
+            callGemini(prompt, analyzeButton).then(response => {
+                modalTitle.textContent = 'AI Advisor: Health Alert Analysis';
+                modalContent.innerHTML = response.replace(/\n/g, '<br>');
+                modal.style.display = 'flex';
+                analyzeButton.innerHTML = '✨ Analyze Alert';
+            });
+        }
+        
+        // --- GEMINI FEATURE 2: SDG IMPACT ---
+        const sdgButton = document.getElementById('sdg-report-button');
+        const sdgContainer = document.getElementById('sdg-report-container');
+
+        sdgButton.addEventListener('click', () => {
+            const prompt = `You are a sustainability and policy analyst. A new smart farm project in Egypt's Delta region incorporates the following technologies: precision irrigation using soil moisture sensors, automated climate control, an on-grid solar power system, and AI models for crop freshness and animal health monitoring. Write a brief, optimistic report (2-3 paragraphs) explaining how this project directly supports Egypt's Vision 2030 and the UN's Sustainable Development Goals, specifically focusing on food security, water conservation, and innovation.`;
+            
+            callGemini(prompt, sdgButton).then(response => {
+                sdgContainer.innerHTML = response.replace(/\n/g, '<br><br>');
+                sdgContainer.classList.remove('hidden');
+                sdgButton.textContent = '✨ Regenerate Analysis';
+            });
+        });
+
+        // --- NAVIGATION LOGIC ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('main section');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                    });
+                }
+            });
+        }, { rootMargin: "-50% 0px -50% 0px" });
+
+        sections.forEach(section => observer.observe(section));
+        
+        // --- LIVE SIMULATOR & TECHNICAL DOCS LOGIC ---
+        let state = {
+            z1_gh_temp: 25.0, z1_gh_soil: 60, z1_pump_status: false, z1_fan_status: false,
+            z2_b_temp: 22.0, z2_b_sound: 'LOW', z2_ai_alert: 'NORMAL',
+            z3_h_ph: 6.2, z3_h_tds: 1100, z3_h_pump: false
+        };
+
+        const elements = {
+            z1: { temp: document.getElementById('z1-gh-temp'), soil: document.getElementById('z1-gh-soil'), pump: document.getElementById('z1-pump-status'), fan: document.getElementById('z1-fan-status') },
+            z2: { temp: document.getElementById('z2-b-temp'), sound: document.getElementById('z2-b-sound'), alert: document.getElementById('z2-ai-alert'), alertContainer: document.getElementById('z2-alert-container') },
+            z3: { ph: document.getElementById('z3-h-ph'), tds: document.getElementById('z3-h-tds'), pump: document.getElementById('z3-h-pump') },
+            lastUpdated: document.getElementById('last-updated')
+        };
+        
+        function createChart(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+            const ctx = canvas.getContext('2d');
+            return new Chart(ctx, { type: 'line', data: { labels: Array(15).fill(''), datasets: [{ data: [], borderColor: '#a3bfa8', borderWidth: 2, pointRadius: 0, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { display: false } }, plugins: { legend: { display: false }, tooltip: { enabled: false } } } });
+        }
+        const charts = { z1: createChart('z1-chart'), z2: createChart('z2-chart'), z3: createChart('z3-chart') };
+
+        function updateChart(chart, newData) { if (!chart) return; chart.data.datasets[0].data.push(newData); if (chart.data.datasets[0].data.length > 15) { chart.data.datasets[0].data.shift(); } chart.update('quiet'); }
+        function updateStatusStyle(el, on, onText = 'ON', offText = 'OFF', onClass = 'status-on', offClass = 'status-off') { if (!el) return; el.textContent = on ? onText : offText; el.className = `px-3 py-1 text-sm font-semibold rounded-full ${on ? onClass : offClass}`; }
+        
+        function simulateData() {
+            state.z1_gh_temp += (Math.random() - 0.5) * 0.4;
+            state.z1_gh_soil += (Math.random() > 0.6 ? -1 : 0.2);
+            state.z1_pump_status = state.z1_gh_soil < 45;
+            state.z1_fan_status = state.z1_gh_temp > 28;
+            elements.z1.temp.textContent = `${state.z1_gh_temp.toFixed(1)}°C`;
+            elements.z1.soil.textContent = `${Math.round(state.z1_gh_soil)}%`;
+            updateStatusStyle(elements.z1.pump, state.z1_pump_status);
+            updateStatusStyle(elements.z1.fan, state.z1_fan_status);
+            updateChart(charts.z1, state.z1_gh_temp);
+
+            state.z2_b_temp += (Math.random() - 0.5) * 0.2;
+            state.z2_b_sound = Math.random() < 0.1 ? 'HIGH' : 'LOW';
+            const wasAlerting = state.z2_ai_alert === 'ALERT';
+            state.z2_ai_alert = Math.random() < 0.05 ? 'ALERT' : 'NORMAL';
+            elements.z2.temp.textContent = `${state.z2_b_temp.toFixed(1)}°C`;
+            elements.z2.sound.textContent = state.z2_b_sound;
+            updateStatusStyle(elements.z2.alert, state.z2_ai_alert === 'ALERT', 'ALERT', 'NORMAL', 'status-off', 'status-idle');
+            
+            const existingButton = document.getElementById('analyze-alert-button');
+            if (state.z2_ai_alert === 'ALERT' && !existingButton) {
+                const analyzeButton = document.createElement('button');
+                analyzeButton.id = 'analyze-alert-button';
+                analyzeButton.className = 'gemini-button ml-4 bg-red-100 text-red-700 font-bold text-xs py-1 px-3 rounded-full hover:bg-red-200';
+                analyzeButton.innerHTML = '✨ Analyze';
+                analyzeButton.onclick = () => showAnomalyAnalysis(state.z2_ai_alert, state.z2_b_temp);
+                elements.z2.alert.parentElement.appendChild(analyzeButton);
+            } else if (state.z2_ai_alert !== 'ALERT' && existingButton) {
+                existingButton.remove();
+            }
+            updateChart(charts.z2, state.z2_b_temp);
+            
+            state.z3_h_ph += (Math.random() - 0.5) * 0.1;
+            state.z3_h_tds += (Math.random() - 0.5) * 20;
+            state.z3_h_pump = state.z3_h_tds < 900;
+            elements.z3.ph.textContent = state.z3_h_ph.toFixed(1);
+            elements.z3.tds.textContent = `${Math.round(state.z3_h_tds)} ppm`;
+            updateStatusStyle(elements.z3.pump, state.z3_h_pump);
+            let hydroTemp = 23 + (Math.random() - 0.5) * 2;
+            updateChart(charts.z3, hydroTemp);
+            
+            elements.lastUpdated.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+        }
+        setInterval(simulateData, 2500);
+        simulateData();
+
+        const pinoutData = {
+            zone1: [
+                { loc: 'Greenhouse', comp: 'DHT1 Temp/Humidity', pin: 4, notes: '' },{ loc: 'Greenhouse', comp: 'Soil Moisture Sensor', pin: 36, notes: 'Analog' },{ loc: 'Greenhouse', comp: 'LDR', pin: 39, notes: 'Analog' },{ loc: 'Greenhouse', comp: 'MQ Gas Sensor 1', pin: 34, notes: 'Analog' },{ loc: 'Greenhouse', comp: 'Relay 1 (Pump)', pin: 16, notes: '' },{ loc: 'Greenhouse', comp: 'Relay 2 (Fan)', pin: 17, notes: '' },{ loc: 'Warehouse', comp: 'DHT2 Temp/Humidity', pin: 5, notes: '' },{ loc: 'Warehouse', comp: 'MQ Gas Sensor 2', pin: 35, notes: 'Analog' },{ loc: 'Warehouse', comp: 'PIR Sensor', pin: 23, notes: '' },{ loc: 'Warehouse', comp: 'Flame Sensor', pin: 25, notes: '' },{ loc: 'Warehouse', comp: 'Servo (Door)', pin: 18, notes: '' },{ loc: 'Shared', comp: 'Buzzer', pin: 19, notes: '' },{ loc: 'Shared', comp: 'RFID SS/RST', pin: '21, 22', notes: '' },{ loc: 'Shared', comp: 'LCD I2C', pin: '26, 27', notes: 'SDA, SCL (Custom)' },
+            ],
+            zone2: [
+                { loc: 'Home', comp: 'DHT Temp/Humidity', pin: 4, notes: '' },{ loc: 'Home', comp: 'MQ Gas Sensor', pin: 34, notes: 'Analog' },{ loc: 'Home', comp: 'PIR Sensor', pin: 23, notes: '' },{ loc: 'Home', comp: 'Flame Sensor', pin: 25, notes: '' },{ loc: 'Home', comp: 'Servo (Window)', pin: 18, notes: '' },{ loc: 'Barn', comp: 'DHT Temp/Humidity', pin: 5, notes: '' },{ loc: 'Barn', comp: 'Relay (Fan)', pin: 16, notes: '' },{ loc: 'Barn', comp: 'Flame Sensor', pin: 35, notes: '' },{ loc: 'Barn', comp: 'Servo (Door)', pin: 17, notes: '' },{ loc: 'Barn', comp: 'Sound Sensor', pin: 39, notes: 'Analog' },{ loc: 'Shared', comp: 'Buzzer', pin: 19, notes: '' },{ loc: 'Shared', comp: 'Keypad', pin: '12-14, 25-27, 32-33', notes: '8 pins' },{ loc: 'Shared', comp: 'LCD I2C', pin: '21, 22', notes: 'SDA, SCL (Default)' },
+            ],
+            zone3: [
+                { loc: 'Parking', comp: 'IR Sensor 1', pin: 13, notes: '' },{ loc: 'Parking', comp: 'IR Sensor 2', pin: 12, notes: '' },{ loc: 'Parking', comp: 'Servo (Gate)', pin: 14, notes: '' },{ loc: 'Hydroponics', comp: 'DHT Temp/Humidity', pin: 4, notes: '' },{ loc: 'Hydroponics', comp: 'Relay (Pump)', pin: 16, notes: '' },{ loc: 'Hydroponics', comp: 'Water Level Sensor', pin: 36, notes: 'Analog' },{ loc: 'Hydroponics', comp: 'pH Sensor', pin: 39, notes: 'Analog' },{ loc: 'Hydroponics', comp: 'TDS Sensor', pin: 35, notes: 'Analog' },{ loc: 'Shared', comp: 'LCD I2C', pin: '21, 22', notes: 'SDA, SCL (Default)' },
+            ]
+        };
+
+        const zoneSelector = document.getElementById('zone-selector');
+        const pinoutTableBody = document.getElementById('pinout-table-body');
+
+        function renderPinoutTable(zone) {
+            pinoutTableBody.innerHTML = '';
+            pinoutData[zone].forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-100';
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-gray-500">${item.loc}</td>
+                    <td class="py-3 px-4 font-semibold">${item.comp}</td>
+                    <td class="py-3 px-4 font-mono text-blue-600">${item.pin}</td>
+                    <td class="py-3 px-4 text-sm text-gray-500">${item.notes}</td>
+                `;
+                pinoutTableBody.appendChild(row);
+            });
+        }
+        
+        zoneSelector.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const selectedZone = `zone${e.target.dataset.zone}`;
+                renderPinoutTable(selectedZone);
+                zoneSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('bg-blue-600', 'text-white'));
+                zoneSelector.querySelectorAll('button').forEach(btn => btn.classList.add('bg-gray-200', 'text-gray-800'));
+                e.target.classList.add('bg-blue-600', 'text-white');
+                e.target.classList.remove('bg-gray-200', 'text-gray-800');
+            }
+        });
+
+        renderPinoutTable('zone1');
+        zoneSelector.querySelector('button[data-zone="1"]').classList.add('bg-blue-600', 'text-white');
+        zoneSelector.querySelector('button[data-zone="1"]').classList.remove('bg-gray-200', 'text-gray-800');
+    });
+</script>
+</body>
+</html>
